@@ -57,22 +57,16 @@ router.get("/campgrounds/:id" , function( req , res){
 
 //edit campground route
 
-router.get("/campgrounds/:id/edit" , isLoggedIn , function( req , res){
-        Campground.findById(req.params.id , function(error , foundCampground){
-                if(error){
-                        console.log(error);
-                        res.redirect("/campgrounds");
-                }
-                else{
-                        res.render( "campgrounds/edit" , {campground : foundCampground});
-                }
-        });
-        
-});
+router.get("/campgrounds/:id/edit" ,checkCampgroundOwnership ,  function( req , res){
+                Campground.findById(req.params.id , function(error , foundCampground){
+                                        res.render( "campgrounds/edit" , {campground : foundCampground});
+
+                });
+        });                
 
 //update campground route
 
-router.put("/campgrounds/:id" , isLoggedIn ,function(req , res){
+router.put("/campgrounds/:id" , checkCampgroundOwnership ,function(req , res){
         //find and update the correct campground 
         //redirect to show page
 
@@ -86,7 +80,7 @@ router.put("/campgrounds/:id" , isLoggedIn ,function(req , res){
         });
 });
 
-router.delete("/campgrounds/:id"  , isLoggedIn , function( req , res){
+router.delete("/campgrounds/:id"  , checkCampgroundOwnership , function( req , res){
         Campground.findByIdAndRemove( req.params.id , function( error){
                 if(error){
                         console.log(error);
@@ -104,6 +98,29 @@ function isLoggedIn(req , res , next){
     }
     res.redirect("/login");
 };
+
+function checkCampgroundOwnership (req , res , next){
+        if(req.isAuthenticated()){
+                Campground.findById(req.params.id , function(error , foundCampground){
+                        if(error){
+                                console.log(error);
+                                res.redirect("back");
+                        }
+                        else{
+                                if(foundCampground.author.id.equals(req.user._id)){
+                                        next();
+                                }
+                                else{
+                                        res.redirect("back");
+                                }
+                                
+                        }
+                });
+        }
+        else{
+                res.redirect("back");
+        }
+}
 
 function isAuthor( req , res , next){
        console.log(req.body) ;
