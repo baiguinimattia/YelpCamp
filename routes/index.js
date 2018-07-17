@@ -19,9 +19,11 @@ router.post("/register" , function(req , res){
   User.register(newUser , req.body.password , function(error , user){
             if(error){
                   console.log(error);
-                  res.render("register")
+                  req.flash("error" , error.message);
+                  res.redirect("back");
             }
             passport.authenticate("local")(req , res , function(){
+                req.flash("success" , "You have registered succesfully!");
                  res.redirect("/campgrounds");
             })
   });
@@ -41,14 +43,8 @@ router.post("/login" , passport.authenticate("local" , {successRedirect : "/camp
 
 router.get("/logout" , function(req , res){
     req.logout();
+    req.flash("error" , "Logged you out!");
     res.redirect("/campgrounds");
 })
-
-function isLoggedIn(req , res , next){
-    if(req.isAuthenticated()){
-            return next();
-    }
-    res.redirect("/login");
-};
 
 module.exports = router;
